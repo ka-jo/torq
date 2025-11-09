@@ -14,7 +14,7 @@ export const enum Flags {
 	 * Indicates a computed observable needs re-evaluation because its dependencies changed.
 	 *
 	 * **Critical architectural constraint**: Only computed observables (ComputedRef, BaseEffect)
-	 * can have this flag set. Simple refs and stores never become dirty because they hold
+	 * can have this flag set. Simple refs and structs never become dirty because they hold
 	 * immediate values rather than computed ones.
 	 *
 	 * **Performance guarantee**: Any observable with this flag set is guaranteed to have a
@@ -29,6 +29,6 @@ export const enum Flags {
 	/** Indicates a computed observable is scheduled for microtask-based re-computation */
 	Queued = 1 << 3,
 
-	/** Indicates a ref should not auto-convert object values to reactive stores */
+	/** Indicates a ref should not auto-convert object values to reactive structs */
 	Shallow = 1 << 4,
 }

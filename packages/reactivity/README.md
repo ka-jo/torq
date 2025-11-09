@@ -17,7 +17,7 @@ This package contains the source code for Mora's reactivity system.
 - Version-based dirty checking for minimal recomputes
 - Microtask-based batching for effects
 - Effects self-schedule once per flush
-- Support AbortSignal lifecycle for Ref, Store, Effect
+- Support AbortSignal lifecycle for Ref, Struct, Effect
 - Support linking signals (bidirectional binding)
 - Provide means of 
 - Symbol.observable compliance for interoperability
@@ -31,7 +31,7 @@ This package contains the source code for Mora's reactivity system.
 
 ## Architectural Assumptions
 
-- Refs and Stores are separate concepts
-- Stores proxy nested refs automatically
+- Refs and Structs are separate concepts
+- Structs proxy nested refs automatically
 - Effects and Computeds share core infrastructure
-- Refs/Stores can be disposed manually or by abort signals
+- Refs/Structs can be disposed manually or by abort signals

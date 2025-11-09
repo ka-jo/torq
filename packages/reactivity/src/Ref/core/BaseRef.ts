@@ -15,7 +15,7 @@ import { Subscription } from "@/common/Subscription";
 import type { RefOptions } from "@/Ref/types";
 import type { Ref } from "@/Ref/Ref";
 import { isRef } from "@/Ref/isRef";
-import { BaseStore } from "@/Store/core/BaseStore";
+import { BaseStruct } from "@/Struct/core/BaseStruct";
 import { currentScope } from "@/common/current-scope";
 import { getNextRefId } from "@/common/ref-id";
 
@@ -107,7 +107,7 @@ export class BaseRef<T = unknown> implements Ref<T, T> {
 		if (isRef(value)) {
 			BaseRef.forwardRef(ref, value);
 		} else if (!(ref[$flags] & Flags.Shallow) && isObject(value)) {
-			ref[$value] = BaseStore.create(value);
+			ref[$value] = BaseStruct.create(value);
 		} else {
 			ref[$value] = value;
 		}
@@ -143,7 +143,7 @@ export class BaseRef<T = unknown> implements Ref<T, T> {
 	 */
 	private static forwardValue<T>(target: BaseRef<T>, value: T): void {
 		if (!(target[$flags] & Flags.Shallow) && isObject(value)) {
-			target[$value] = BaseStore.create(value);
+			target[$value] = BaseStruct.create(value);
 		} else {
 			target[$value] = value;
 		}

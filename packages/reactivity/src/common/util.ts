@@ -63,7 +63,7 @@ export function isSymbol(value: unknown): value is symbol {
  *
  * @privateRemarks
  * The original motivation for this function was to enable inheritance of getters/setters in
- * stores
+ * structs
  */
 export function getPropertyDescriptor(
 	obj: object,

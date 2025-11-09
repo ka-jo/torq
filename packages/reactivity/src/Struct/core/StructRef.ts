@@ -5,7 +5,7 @@ import { Subscription } from "@/common/Subscription";
 import { Ref } from "@/Ref";
 import { getNextRefId } from "@/common/ref-id";
 
-export class StoreRef<T = unknown> implements Ref<T, T> {
+export class StructRef<T = unknown> implements Ref<T, T> {
 	declare [$value]: T;
 	declare [$flags]: number;
 	declare [$subscribers]: Subscription[];
