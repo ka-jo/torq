@@ -49,14 +49,14 @@ export default defineConfig({
 		setupFiles: ["./tests/fixtures/expect/toBeRef.ts"],
 		alias: (() => {
 			// Allow switching between source and built files for integration tests
-			const testTarget = process.env.MORA_TEST_TARGET;
+			const testTarget = process.env.MORA_TEST_TARGET || "source"; // Default to source
 			const aliases: Record<string, string> = {};
-			
+
 			if (testTarget === "source") {
 				// Map @mora-js/reactivity to source files via @ alias
 				aliases["@mora-js/reactivity"] = resolve(__dirname, "src/index.ts");
 			}
-			// Default: use the workspace dependency (built files)
+			// When testTarget === "dist", use the workspace dependency (built files)
 			return aliases;
 		})(),
 	},

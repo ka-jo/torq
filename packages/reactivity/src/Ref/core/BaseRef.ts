@@ -7,6 +7,7 @@ import {
 	$ref,
 	$options,
 	$dependencies,
+	$id,
 } from "@/common/symbols";
 import { createObserver, isObject } from "@/common/util";
 import { Flags } from "@/common/flags";
@@ -16,6 +17,7 @@ import type { Ref } from "@/Ref/Ref";
 import { isRef } from "@/Ref/isRef";
 import { BaseStore } from "@/Store/core/BaseStore";
 import { currentScope } from "@/common/current-scope";
+import { getNextRefId } from "@/common/ref-id";
 
 const $forwardObserver = Symbol("forward-observer");
 
@@ -30,12 +32,14 @@ export class BaseRef<T = unknown> implements Ref<T, T> {
 	declare [$options]?: RefOptions;
 	declare [$dependencies]?: Subscription;
 	declare [$forwardObserver]?: Partial<Observer<T>>;
+	declare [$id]: number;
 
 	constructor(value: T | Ref<T>, options?: RefOptions) {
 		this[$flags] = 0;
 		this[$subscribers] = [];
 		this[$ref] = this;
 		this[$options] = options;
+		this[$id] = getNextRefId();
 
 		BaseRef.initValue(this, value);
 
@@ -47,6 +51,10 @@ export class BaseRef<T = unknown> implements Ref<T, T> {
 				options.signal.addEventListener("abort", this.dispose);
 			}
 		}
+	}
+
+	get disposed(): boolean {
+		return (this[$flags] & Flags.Disposed) !== 0;
 	}
 
 	get(): T {

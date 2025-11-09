@@ -124,7 +124,7 @@ describe("lazy evaluation", () => {
 			expect(isEvenGetter).toHaveBeenCalledTimes(1);
 		});
 
-		it("should not compute on next access if no dependencies changed", () => {
+		it("should not compute on next access if no dependencies changed", async () => {
 			isEven.get();
 			// first access should always compute
 			expect(isEvenGetter).toHaveBeenCalledTimes(1);
@@ -135,6 +135,10 @@ describe("lazy evaluation", () => {
 
 			// second access should not compute because dependencies didn't change
 			expect(isEvenGetter).toHaveBeenCalledTimes(1);
+
+			await flushMicrotasks();
+
+			expect(isEvenGetter).toHaveBeenCalledTimes(1);
 		});
 
 		it("should compute if dependencies changed and has subscribers", async () => {
@@ -143,7 +147,7 @@ describe("lazy evaluation", () => {
 
 			isEven.subscribe({ next: () => {} });
 
-			// setting count to true should make remainder change
+			// setting count to two should make remainder change
 			count.set(2);
 
 			await flushMicrotasks();

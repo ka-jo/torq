@@ -322,6 +322,34 @@ describe("BaseScope", () => {
 		});
 	});
 
+	describe("disposed getter", () => {
+		it("should return false for a newly created scope", () => {
+			const scope = new BaseScope();
+
+			expect(scope.disposed).toBe(false);
+		});
+
+		it("should return true after calling dispose", () => {
+			const scope = new BaseScope();
+
+			scope.dispose();
+
+			expect(scope.disposed).toBe(true);
+		});
+
+		it("should return true for all children when parent is disposed", () => {
+			const parent = new BaseScope();
+			const child1 = new BaseScope({ scope: parent });
+			const child2 = new BaseScope({ scope: parent });
+
+			parent.dispose();
+
+			expect(parent.disposed).toBe(true);
+			expect(child1.disposed).toBe(true);
+			expect(child2.disposed).toBe(true);
+		});
+	});
+
 	describe("dispose method", () => {
 		it("should return void", () => {
 			const scope = new BaseScope();

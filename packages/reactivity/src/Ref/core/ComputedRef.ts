@@ -12,6 +12,7 @@ import {
 	$parent,
 	$children,
 	$index,
+	$id,
 } from "@/common/symbols";
 import type { Observable, Observer } from "@/common/types";
 import { Subscription } from "@/common/Subscription";
@@ -27,6 +28,7 @@ import {
 	setActiveScope,
 } from "@/common/current-scope";
 import { createObserver } from "@/common/util";
+import { getNextRefId } from "@/common/ref-id";
 
 /** We use this to mark a ref that hasn't been computed yet. */
 const INITIAL_VALUE: any = $value;
@@ -47,6 +49,7 @@ export class ComputedRef<TGet = unknown, TSet = TGet>
 	declare [$parent]: Scope | null;
 	declare [$children]: Scope[] | null;
 	declare [$index]: number;
+	declare [$id]: number;
 
 	constructor(options: ComputedRefOptions<TGet> | WritableComputedRefOptions<TGet, TSet>) {
 		this[$subscribers] = [];
@@ -56,12 +59,13 @@ export class ComputedRef<TGet = unknown, TSet = TGet>
 		this[$ref] = this;
 		this[$options] = options;
 		this[$observer] = ComputedRef.initObserver(this);
+		this[$id] = getNextRefId();
 
 		initScope(this, options);
 
 		if (options.signal) {
 			if (options.signal.aborted) {
-				this[$flags] |= Flags.Disposed;
+				this[$flags] = Flags.Disposed;
 			} else {
 				this.dispose = this.dispose.bind(this);
 				options.signal.addEventListener("abort", this.dispose);
@@ -69,17 +73,22 @@ export class ComputedRef<TGet = unknown, TSet = TGet>
 		}
 	}
 
+	get disposed(): boolean {
+		return (this[$flags] & Flags.Disposed) !== 0;
+	}
+
 	get(): TGet {
 		if (this[$flags] & Flags.Disposed) {
 			return this[$value] as TGet;
 		}
 
-		if (currentScope) {
-			currentScope.observe(this);
-		}
-
 		if (this[$flags] & Flags.Dirty) {
 			this[$compute]();
+		}
+
+		// We don't want to observe a computed ref until it's been computed
+		if (currentScope) {
+			currentScope.observe(this);
 		}
 
 		return this[$value] as TGet;
@@ -167,8 +176,6 @@ export class ComputedRef<TGet = unknown, TSet = TGet>
 		// This would be the case if `get` was called on the ref or a dependency of the ref
 		if (!(this[$flags] & Flags.Dirty)) return;
 
-		this[$flags] &= ~(Flags.Dirty | Flags.Queued);
-
 		if (this[$value] !== INITIAL_VALUE && !ComputedRef.hasOutdatedDependenciesAfterCompute(this))
 			return;
 
@@ -189,6 +196,9 @@ export class ComputedRef<TGet = unknown, TSet = TGet>
 				this[$value] = computedValue;
 				Subscription.notifyAll(this[$subscribers], computedValue);
 			}
+
+			// Clear flags after computation is complete
+			this[$flags] &= ~(Flags.Dirty | Flags.Queued);
 		} catch (e) {
 			if (e instanceof Error === false) e = new Error(String(e));
 
@@ -203,10 +213,10 @@ export class ComputedRef<TGet = unknown, TSet = TGet>
 	 * @param ref - The computed ref to be notified
 	 * @returns
 	 */
-	private static onDependencyChange(ref: ComputedRef<any>) {
+	private static onDependencyChange(ref: ComputedRef<any>): void {
 		ComputedRef.onDependencyDirty(ref);
 
-		if (ref[$flags] & Flags.Queued) return;
+		if (ref[$flags] & Flags.Queued || ref[$subscribers].length === 0) return;
 
 		ref[$flags] |= Flags.Queued;
 
@@ -220,7 +230,7 @@ export class ComputedRef<TGet = unknown, TSet = TGet>
 	 * @param ref - The computed ref to be notified
 	 * @returns
 	 */
-	private static onDependencyDirty(ref: ComputedRef<any>) {
+	private static onDependencyDirty(ref: ComputedRef<any>): void {
 		// If already dirty, we've already propagated the dirty signal downstream
 		if (ref[$flags] & Flags.Dirty) return;
 

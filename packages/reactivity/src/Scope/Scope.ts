@@ -33,6 +33,17 @@ export interface Scope {
 	[$index]: number;
 
 	/**
+	 * Returns true if this scope has been disposed.
+	 *
+	 * @remarks
+	 * Once disposed, a scope cannot be reactivated. Disposed scopes have cleaned up
+	 * all dependencies and child scopes.
+	 *
+	 * @public
+	 */
+	readonly disposed: boolean;
+
+	/**
 	 * Returns an iterator of all observables that have been observed by this scope.
 	 * @remarks
 	 * Iteration order is not guaranteed and the iterator is live; observables could be added or
@@ -106,7 +117,7 @@ export const Scope: ScopeConstructor = Object.defineProperties(
  * @internal
  */
 export function initScope(scope: Scope, options?: ScopeOptions): void {
-	const parent = options?.scope ?? currentScope ?? null;
+	const parent = options?.scope ?? currentScope;
 	if (parent) {
 		const parentChildren = parent[$children];
 		if (parentChildren === null) {

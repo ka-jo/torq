@@ -4,7 +4,7 @@ import { isRef } from "@/Ref/isRef";
 import { computed } from "@/Ref/computed";
 import type { Observable, Observer } from "@/common/types";
 import type { Subscription } from "@/common/Subscription";
-import { $flags, $subscribers, $ref } from "@/common/symbols";
+import { $flags, $subscribers, $ref, $id } from "@/common/symbols";
 
 /**
  * The `Ref` interface is the core reactive object in Mora. A ref instance holds a value
@@ -58,6 +58,25 @@ export interface Ref<TGet = unknown, TSet = TGet> extends Observable<TGet> {
 	 * @internal
 	 */
 	[$ref]: Ref<TGet, TSet>;
+
+	/**
+	 * A unique numeric identifier for this ref instance, useful for debugging.
+	 *
+	 * @internal
+	 */
+	[$id]: number;
+
+	/**
+	 * Returns true if this ref has been disposed and will no longer notify subscribers
+	 * or accept new subscriptions.
+	 *
+	 * @remarks
+	 * Once disposed, a ref cannot be reactivated. Operations on disposed refs are safe
+	 * but have no effect - reads return the last value, and writes are silently ignored.
+	 *
+	 * @public
+	 */
+	readonly disposed: boolean;
 
 	/**
 	 * This method technically exists on the instance of the ref itself because it makes

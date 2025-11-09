@@ -1,19 +1,26 @@
-import { $flags, $ref, $subscribers, $value } from "@/common/symbols";
+import { $flags, $ref, $subscribers, $value, $id } from "@/common/symbols";
 import { Observer } from "@/common/types";
 import { createObserver } from "@/common/util";
 import { Subscription } from "@/common/Subscription";
 import { Ref } from "@/Ref";
+import { getNextRefId } from "@/common/ref-id";
 
 export class StoreRef<T = unknown> implements Ref<T, T> {
 	declare [$value]: T;
 	declare [$flags]: number;
 	declare [$subscribers]: Subscription[];
 	declare [$ref]: Ref<T, T>;
+	declare [$id]: number;
 
 	constructor(value: T) {
 		this[$flags] = 0;
 		this[$subscribers] = [];
 		this[$ref] = this;
+		this[$id] = getNextRefId();
+	}
+
+	get disposed(): boolean {
+		throw new Error("Method not implemented.");
 	}
 
 	get(): T {

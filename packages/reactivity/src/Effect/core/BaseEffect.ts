@@ -38,6 +38,17 @@ export class BaseEffect implements Effect {
 
 	constructor(fn: (scope: Scope) => void, options?: EffectOptions) {
 		this.run = fn;
+		if (options?.signal) {
+			if (options.signal.aborted) {
+				this[$flags] = Flags.Disposed;
+				this[$parent] = null;
+				this[$children] = null;
+				return;
+			} else {
+				this.dispose = this.dispose.bind(this);
+				options.signal.addEventListener("abort", this.dispose);
+			}
+		}
 		this[$flags] = Flags.Enabled;
 		this[$dependencies] = [];
 		this[$observer] = createObserver({
@@ -45,13 +56,17 @@ export class BaseEffect implements Effect {
 		});
 		this[$effect] = this;
 
-		this[$compute]();
-
 		initScope(this, options);
+
+		this[$compute]();
 	}
 
 	get enabled(): boolean {
 		return (this[$flags] & Flags.Enabled) > 0;
+	}
+
+	get disposed(): boolean {
+		return (this[$flags] & Flags.Disposed) !== 0;
 	}
 
 	enable(): void {
@@ -110,6 +125,11 @@ export class BaseEffect implements Effect {
 		const prevDependencyIndex = dependencyIndex;
 
 		setActiveScope(this);
+
+		const len = this[$children]!.length;
+		for (let i = 0; i < len; i++) {
+			this[$children]![0].dispose();
+		}
 
 		try {
 			this.run(this);

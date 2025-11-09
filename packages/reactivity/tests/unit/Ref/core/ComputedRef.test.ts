@@ -316,6 +316,42 @@ describe("ComputedRef", () => {
 		});
 	});
 
+	describe("disposed getter", () => {
+		it("should return false for a newly created computed ref", () => {
+			const ref = new ComputedRef({ get: () => 0 });
+
+			expect(ref.disposed).toBe(false);
+		});
+
+		it("should return true after calling dispose", () => {
+			const ref = new ComputedRef({ get: () => 0 });
+
+			ref.dispose();
+
+			expect(ref.disposed).toBe(true);
+		});
+
+		it("should return true when created with an aborted signal", () => {
+			const controller = new AbortController();
+			controller.abort();
+
+			const ref = new ComputedRef({ get: () => 0, signal: controller.signal });
+
+			expect(ref.disposed).toBe(true);
+		});
+
+		it("should return true after signal is aborted", () => {
+			const controller = new AbortController();
+			const ref = new ComputedRef({ get: () => 0, signal: controller.signal });
+
+			expect(ref.disposed).toBe(false);
+
+			controller.abort();
+
+			expect(ref.disposed).toBe(true);
+		});
+	});
+
 	describe("dispose method", () => {
 		it("should return void", () => {
 			const ref = new ComputedRef({ get: () => 0 });

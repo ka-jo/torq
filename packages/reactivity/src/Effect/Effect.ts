@@ -11,6 +11,16 @@ export interface Effect extends Scope {
 	 */
 	readonly enabled: boolean;
 	/**
+	 * Returns true if this effect has been disposed and will no longer run.
+	 *
+	 * @remarks
+	 * Once disposed, an effect cannot be reactivated. Disposed effects clean up
+	 * all dependencies and subscriptions.
+	 *
+	 * @public
+	 */
+	readonly disposed: boolean;
+	/**
 	 * Allows the effect to automatically run in response to changes in dependencies.
 	 */
 	enable(): void;

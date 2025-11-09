@@ -1,4 +1,5 @@
 import { Effect, Ref } from "@mora-js/reactivity";
+import { flushMicrotasks } from "../fixtures/util";
 
 describe("Effect", () => {
 	describe("reactivity", () => {
@@ -15,7 +16,7 @@ describe("Effect", () => {
 			ref.set(1);
 
 			// Wait for microtask
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(fn).toHaveBeenCalledTimes(1);
 		});
@@ -35,7 +36,7 @@ describe("Effect", () => {
 			ref1.set(1);
 
 			// Wait for microtask
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(fn).toHaveBeenCalledTimes(1);
 
@@ -45,7 +46,7 @@ describe("Effect", () => {
 			ref2.set(1);
 
 			// Wait for microtask
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(fn).toHaveBeenCalledTimes(1);
 		});
@@ -68,26 +69,26 @@ describe("Effect", () => {
 
 			// Should track ref1 initially
 			ref1.set(1);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 			expect(fn).toHaveBeenCalledTimes(1);
 
 			fn.mockClear();
 
 			// Change condition, should now track ref2
 			condition.set(false);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 			expect(fn).toHaveBeenCalledTimes(1);
 
 			fn.mockClear();
 
 			// ref1 should no longer trigger effect
 			ref1.set(2);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 			expect(fn).not.toHaveBeenCalled();
 
 			// ref2 should trigger effect
 			ref2.set(1);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 			expect(fn).toHaveBeenCalledTimes(1);
 		});
 
@@ -104,7 +105,7 @@ describe("Effect", () => {
 			effect.disable();
 
 			ref.set(1);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(fn).not.toHaveBeenCalled();
 		});
@@ -122,14 +123,14 @@ describe("Effect", () => {
 			effect.disable();
 
 			ref.set(1);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(fn).not.toHaveBeenCalled();
 
 			effect.enable();
 
 			ref.set(2);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(fn).toHaveBeenCalledTimes(1);
 		});
@@ -147,7 +148,7 @@ describe("Effect", () => {
 			effect.dispose();
 
 			ref.set(1);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(fn).not.toHaveBeenCalled();
 		});
@@ -171,7 +172,7 @@ describe("Effect", () => {
 			ref2.set(2);
 
 			// Wait for microtask
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			// Should only run once
 			expect(fn).toHaveBeenCalledTimes(1);
@@ -192,8 +193,7 @@ describe("Effect", () => {
 
 			count.set(1);
 
-			// Wait for microtask
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(fn).toHaveBeenCalledTimes(1);
 		});
@@ -213,7 +213,7 @@ describe("Effect", () => {
 			count.set(1);
 
 			// Wait for microtask
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(fn).toHaveBeenCalledTimes(1);
 		});
@@ -233,7 +233,7 @@ describe("Effect", () => {
 			count.set(3);
 
 			// Wait for microtask
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			// Effect should not re-run because isOdd is still true
 			expect(fn).not.toHaveBeenCalled();
@@ -262,18 +262,35 @@ describe("Effect", () => {
 			innerFn.mockClear();
 
 			ref1.set(1);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			// Outer effect should re-run and create a new inner effect
 			expect(outerFn).toHaveBeenCalledTimes(1);
 			expect(innerFn).toHaveBeenCalledTimes(1);
+		});
 
-			// Clear again
+		it("should allow child effects to run independently", async () => {
+			const ref1 = Ref(0);
+			const ref2 = Ref(0);
+			const outerFn = vi.fn();
+			const innerFn = vi.fn();
+
+			const outerEffect = Effect(() => {
+				outerFn();
+				ref1.get();
+
+				Effect(() => {
+					innerFn();
+					ref2.get();
+				});
+			});
+
+			// Clear initial calls
 			outerFn.mockClear();
 			innerFn.mockClear();
 
 			ref2.set(1);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			// Only inner effect should run
 			expect(outerFn).not.toHaveBeenCalled();
@@ -304,7 +321,7 @@ describe("Effect", () => {
 
 			ref1.set(1);
 			ref2.set(1);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
 			expect(outerFn).not.toHaveBeenCalled();
 			expect(innerFn).not.toHaveBeenCalled();
@@ -314,44 +331,29 @@ describe("Effect", () => {
 	describe("effect cleanup on re-run", () => {
 		it("should dispose old child effects when parent re-runs", async () => {
 			const ref = Ref(0);
-			const effectFn = vi.fn();
-			const childFn = vi.fn();
 
-			Effect(() => {
-				effectFn();
+			const outerEffect = Effect(() => {
 				ref.get();
 
 				// Create a child effect that depends on ref
 				Effect(() => {
-					childFn();
 					ref.get();
 				});
 			});
 
-			// Clear initial calls
-			effectFn.mockClear();
-			childFn.mockClear();
+			const child1 = Array.from(outerEffect.scopes())[0];
+			expect(child1).toBeDefined();
+			expect(child1.disposed).toBe(false);
 
-			// Change ref, parent effect re-runs and creates new child effect
+			// Update ref to trigger outer effect re-run
 			ref.set(1);
-			await new Promise((resolve) => setTimeout(resolve, 0));
+			await flushMicrotasks();
 
-			expect(effectFn).toHaveBeenCalledTimes(1);
-			// Child should run once for the new child effect
-			expect(childFn).toHaveBeenCalledTimes(1);
-
-			// Clear again
-			effectFn.mockClear();
-			childFn.mockClear();
-
-			// Change ref again
-			ref.set(2);
-			await new Promise((resolve) => setTimeout(resolve, 0));
-
-			// Parent runs once, new child runs once
-			expect(effectFn).toHaveBeenCalledTimes(1);
-			// Old child should be disposed, so only new child runs
-			expect(childFn).toHaveBeenCalledTimes(1);
+			const child2 = Array.from(outerEffect.scopes())[0];
+			expect(child2).toBeDefined();
+			expect(child2).not.toBe(child1);
+			expect(child1.disposed).toBe(true);
+			expect(child2.disposed).toBe(false);
 		});
 	});
 });

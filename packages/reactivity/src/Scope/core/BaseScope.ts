@@ -26,6 +26,10 @@ export class BaseScope implements Scope {
 		if (this[$children]) yield* this[$children];
 	}
 
+	get disposed(): boolean {
+		return this[$children] === null;
+	}
+
 	observe(observable: Observable): void {
 		if (this[$children] === null) return; // Already disposed
 

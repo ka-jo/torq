@@ -407,6 +407,42 @@ describe("BaseEffect", () => {
 		});
 	});
 
+	describe("disposed getter", () => {
+		it("should return false for a newly created effect", () => {
+			const effect = new BaseEffect(() => {});
+
+			expect(effect.disposed).toBe(false);
+		});
+
+		it("should return true after calling dispose", () => {
+			const effect = new BaseEffect(() => {});
+
+			effect.dispose();
+
+			expect(effect.disposed).toBe(true);
+		});
+
+		it("should return true when created with an aborted signal", () => {
+			const controller = new AbortController();
+			controller.abort();
+
+			const effect = new BaseEffect(() => {}, { signal: controller.signal });
+
+			expect(effect.disposed).toBe(true);
+		});
+
+		it("should return true after signal is aborted", () => {
+			const controller = new AbortController();
+			const effect = new BaseEffect(() => {}, { signal: controller.signal });
+
+			expect(effect.disposed).toBe(false);
+
+			controller.abort();
+
+			expect(effect.disposed).toBe(true);
+		});
+	});
+
 	describe("dispose method", () => {
 		it("should return void", () => {
 			const effect = new BaseEffect(() => {});
