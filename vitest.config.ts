@@ -5,6 +5,7 @@ export default defineConfig({
 		workspace: ["packages/*"],
 		benchmark: {
 			outputFile: "./benchmark-results.json",
+			reporters: ["verbose"],
 		},
 	},
 });
