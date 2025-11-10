@@ -1,4 +1,4 @@
-import { ReadonlyRef, Ref } from "@mora-js/reactivity";
+import { ReadonlyRef, Ref } from "@sheen/reactivity";
 import { flushMicrotasks } from "../fixtures/util";
 
 test("computed with one dependency", () => {

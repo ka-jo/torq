@@ -1,5 +1,5 @@
 {
-    "name": "@mora-js/reactivity",
+    "name": "@sheen/reactivity",
     "author": "Kaleb Baldwin",
     "license": "MIT",
     "version": "0.0.1",
@@ -8,13 +8,13 @@
     "types": "dist/reactivity.d.ts",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ka-jo/mora",
+        "url": "git+https://github.com/ka-jo/sheen",
         "directory": "packages/reactivity"
     },
     "scripts": {
         "test": "vitest run --typecheck",
-        "test:source": "MORA_TEST_TARGET=source vitest run --typecheck",
-        "test:dist": "MORA_TEST_TARGET=dist vitest run --typecheck",
+        "test:source": "SHEEN_TEST_TARGET=source vitest run --typecheck",
+        "test:dist": "SHEEN_TEST_TARGET=dist vitest run --typecheck",
         "build": "vite build",
         "bench": "vitest bench",
         "bench:watch": "vitest bench --watch"
@@ -23,7 +23,7 @@
         "symbol-observable": "^4.0.0"
     },
     "devDependencies": {
-        "@mora-js/reactivity": "workspace:*",
+        "@sheen/reactivity": "workspace:*",
         "mobx": "^6.12.0",
         "@vue/reactivity": "^3.4.0",
         "solid-js": "^1.8.0",

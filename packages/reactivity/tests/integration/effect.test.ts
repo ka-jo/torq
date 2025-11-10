@@ -1,4 +1,4 @@
-import { Effect, Ref } from "@mora-js/reactivity";
+import { Effect, Ref } from "@sheen/reactivity";
 import { flushMicrotasks } from "../fixtures/util";
 
 describe("Effect", () => {

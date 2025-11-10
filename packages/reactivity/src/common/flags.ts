@@ -1,5 +1,5 @@
 /**
- * Bitwise flags used throughout the Mora reactivity system for efficient state tracking.
+ * Bitwise flags used throughout the Sheen reactivity system for efficient state tracking.
  *
  * @internal
  */

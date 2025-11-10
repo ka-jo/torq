@@ -1,4 +1,4 @@
-import { Struct, Ref } from "@mora-js/reactivity";
+import { Struct, Ref } from "@sheen/reactivity";
 import { flushMicrotasks } from "../fixtures/util";
 
 describe("Struct", () => {

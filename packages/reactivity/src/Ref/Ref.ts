@@ -7,7 +7,7 @@ import type { Subscription } from "@/common/Subscription";
 import { $flags, $subscribers, $ref, $id } from "@/common/symbols";
 
 /**
- * The `Ref` interface is the core reactive object in Mora. A ref instance holds a value
+ * The `Ref` interface is the core reactive object in Sheen. A ref instance holds a value
  * and allows you to subscribe to changes to that value. Accessing a ref's value will
  * register it as a dependency in the current tracking context if one exists. Setting a
  * ref's value will notify all subscribers of the change and trigger any dependent
@@ -17,7 +17,7 @@ import { $flags, $subscribers, $ref, $id } from "@/common/symbols";
  * Though the `Ref` interface is modeled after the TC39 Signals proposal, we opted to
  * use the term "ref" for a few reasons that we acknowledge are largely author preference:
  * - Ref is already an established term in the language itself (see {@link WeakRef})
- * - Mora refs have more functionality than the Signal described in the proposal; they
+ * - Sheen refs have more functionality than the Signal described in the proposal; they
  *   come with a built-in subscription model based on the TC39 Observable proposal
  * - We believe first and foremost that — to the consumer — this primitive is a value and
  *   reactivity is an emergent behavior of the value, not the sole purpose of it
@@ -27,7 +27,7 @@ import { $flags, $subscribers, $ref, $id } from "@/common/symbols";
  *
  * The term "signal" may have a place in the mental model of library authors, but as a means
  * of notifying subscribers, we believe "observable" fits into the mental model of the
- * consumer better. To this end, Mora's refs can be thought of as the union of "signals" and
+ * consumer better. To this end, Sheen's refs can be thought of as the union of "signals" and
  * "observables" packaged with the consumer in mind.
  *
  * @public

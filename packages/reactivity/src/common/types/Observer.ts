@@ -33,7 +33,7 @@ export interface Observer<T = unknown> {
 	 *
 	 * @privateRemarks
 	 * Disposing Refs will trigger this callback and is currently the only way to complete an
-	 * observable in Mora
+	 * observable in Sheen
 	 */
 	complete(): void;
 	/**

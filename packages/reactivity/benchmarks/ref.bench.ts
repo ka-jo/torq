@@ -5,7 +5,7 @@ import { Ref, Effect, Scope } from "@/index";
  * Ref Benchmarks
  *
  * Core benchmarks for the Ref primitive - the fundamental building block of
- * Mora's reactivity system. Refs hold reactive values that can be read,
+ * Sheen's reactivity system. Refs hold reactive values that can be read,
  * written, and subscribed to.
  */
 

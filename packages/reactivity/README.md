@@ -1,6 +1,6 @@
-# Mora Reactivity System
+# Sheen Reactivity System
 
-This package contains the source code for Mora's reactivity system. 
+This package contains the source code for Sheen's reactivity system. 
 
 ## Overall Philosophy
 
