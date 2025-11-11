@@ -37,7 +37,7 @@ export default defineConfig({
 		target: "es2022",
 		lib: {
 			entry: resolve(__dirname, "src/index.ts"),
-			name: "SheenReactivity",
+			name: "TorqReactivity",
 			fileName: (format) => `reactivity.${format}.js`,
 			formats: ["es", "cjs", "umd"],
 		},
@@ -49,12 +49,12 @@ export default defineConfig({
 		setupFiles: ["./tests/fixtures/expect/toBeRef.ts"],
 		alias: (() => {
 			// Allow switching between source and built files for integration tests
-			const testTarget = process.env.SHEEN_TEST_TARGET || "source"; // Default to source
+			const testTarget = process.env.TORQ_TEST_TARGET || "source"; // Default to source
 			const aliases: Record<string, string> = {};
 
 			if (testTarget === "source") {
-				// Map @sheen/reactivity to source files via @ alias
-				aliases["@sheen/reactivity"] = resolve(__dirname, "src/index.ts");
+				// Map @torq-js/reactivity to source files via @ alias
+				aliases["@torq-js/reactivity"] = resolve(__dirname, "src/index.ts");
 			}
 			// When testTarget === "dist", use the workspace dependency (built files)
 			return aliases;

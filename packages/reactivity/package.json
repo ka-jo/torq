@@ -1,5 +1,5 @@
 {
-    "name": "@sheen/reactivity",
+    "name": "@torq-js/reactivity",
     "author": "Kaleb Baldwin",
     "license": "MIT",
     "version": "0.0.1",
@@ -8,13 +8,13 @@
     "types": "dist/reactivity.d.ts",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ka-jo/sheen",
+        "url": "git+https://github.com/ka-jo/torq",
         "directory": "packages/reactivity"
     },
     "scripts": {
         "test": "vitest run --typecheck",
-        "test:source": "SHEEN_TEST_TARGET=source vitest run --typecheck",
-        "test:dist": "SHEEN_TEST_TARGET=dist vitest run --typecheck",
+        "test:source": "TORQ_TEST_TARGET=source vitest run --typecheck",
+        "test:dist": "TORQ_TEST_TARGET=dist vitest run --typecheck",
         "build": "vite build",
         "bench": "vitest bench",
         "bench:watch": "vitest bench --watch"
@@ -23,7 +23,7 @@
         "symbol-observable": "^4.0.0"
     },
     "devDependencies": {
-        "@sheen/reactivity": "workspace:*",
+        "@torq-js/reactivity": "workspace:*",
         "mobx": "^6.12.0",
         "@vue/reactivity": "^3.4.0",
         "solid-js": "^1.8.0",

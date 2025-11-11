@@ -13,7 +13,7 @@ import { createObserver, NO_OP } from "@/common/util";
 
 /**
  * A subscription implementation intended to be used to manage subscriptions for any
- * Observables in Sheen (i.e. Refs and Structs).
+ * Observables in Torq (i.e. Refs and Structs).
  *
  * This class provides fine-grained control over subscription lifecycle, allowing
  * subscriptions to be enabled/disabled without full disposal. When disabled, the

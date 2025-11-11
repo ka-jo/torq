@@ -5,7 +5,7 @@ import type { Subscription } from "@/common/Subscription";
  * Observable interface for interoperability with TC39-compliant reactive libraries.
  *
  /**
- * This interface represents the minimal contract for observables that Sheen can
+ * This interface represents the minimal contract for observables that Torq can
  * interoperate with. All TC39-compliant observables (including RxJS) implement
  * both subscribe() and Symbol.observable.
  *

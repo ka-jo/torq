@@ -1,6 +1,6 @@
-# Sheen Reactivity System
+# Torq Reactivity System
 
-This package contains the source code for Sheen's reactivity system. 
+This package contains the source code for Torq's reactivity system. 
 
 ## Overall Philosophy
 
