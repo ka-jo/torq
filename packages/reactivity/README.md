@@ -231,7 +231,7 @@ count.subscribe((value) => console.log('Value: ', value));
 count.set(1); // Logs: "Value: 1"
 ```
 
-This makes refs fully interoperable with any library or framework that understands observables. Think of refs as the union of signals and observables: you get both automatic dependency tracking and explicit subscription control in one primitive.
+This makes refs fully interoperable with any library or framework that understands observables. Think of refs as the union of signals and observables: you get automatic dependency tracking and explicit subscription control in one primitive.
 
 ### Dependency Tracking
 
@@ -402,7 +402,7 @@ Scopes can be created without a parent by explicitly passing `null` as the scope
 ```javascript
 Effect(() => {
   // This effect is detached - it won't be disposed when the parent effect re-runs or is disposed
-  const detachedEffecct = Effect(() => {
+  const detachedEffect = Effect(() => {
     console.log('Detached scope setup');
   }, { scope: null });
 });

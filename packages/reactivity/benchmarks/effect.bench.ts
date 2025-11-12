@@ -204,3 +204,23 @@ describe("Effect Lifecycle", () => {
 		scope.dispose();
 	});
 });
+
+describe("Effect Disposal", () => {
+	bench("dispose simple effect (1 dependency)", () => {
+		const r = Ref(0);
+		for (let i = 0; i < 100; i++) {
+			const scope = Scope();
+			const effect = Effect(() => r.get(), { scope });
+			effect.dispose();
+		}
+	});
+
+	bench("dispose effect with 10 dependencies", () => {
+		const refs = Array.from({ length: 10 }, () => Ref(0));
+		for (let i = 0; i < 100; i++) {
+			const scope = Scope();
+			const effect = Effect(() => refs.reduce((acc, r) => acc + r.get(), 0), { scope });
+			effect.dispose();
+		}
+	});
+});

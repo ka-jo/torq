@@ -152,3 +152,74 @@ describe("Computed Fan Patterns", () => {
 		}
 	});
 });
+
+describe("Computed Disposal", () => {
+	bench("dispose simple computed (never evaluated)", () => {
+		const r = Ref(0);
+		for (let i = 0; i < 1000; i++) {
+			const c = Ref.computed(() => r.get() * 2);
+			c.dispose();
+		}
+	});
+
+	bench("dispose simple computed (evaluated once)", () => {
+		const r = Ref(0);
+		for (let i = 0; i < 1000; i++) {
+			const c = Ref.computed(() => r.get() * 2);
+			c.get();
+			c.dispose();
+		}
+	});
+
+	bench("dispose computed with multiple deps", () => {
+		const r1 = Ref(0);
+		const r2 = Ref(1);
+		const r3 = Ref(2);
+		for (let i = 0; i < 100; i++) {
+			const c = Ref.computed(() => r1.get() + r2.get() + r3.get());
+			c.get();
+			c.dispose();
+		}
+	});
+
+	bench("dispose computed chain (depth 10)", () => {
+		const r = Ref(0);
+		for (let i = 0; i < 100; i++) {
+			let c = Ref.computed(() => r.get());
+			const chain = [c];
+			for (let j = 0; j < 9; j++) {
+				const prev = c;
+				c = Ref.computed(() => prev.get() + 1);
+				chain.push(c);
+			}
+			// Dispose in reverse order
+			for (let j = chain.length - 1; j >= 0; j--) {
+				chain[j].dispose();
+			}
+		}
+	});
+
+	bench("dispose computed diamond", () => {
+		const r = Ref(0);
+		for (let i = 0; i < 100; i++) {
+			const left = Ref.computed(() => r.get() + 1);
+			const right = Ref.computed(() => r.get() + 2);
+			const bottom = Ref.computed(() => left.get() + right.get());
+			bottom.get();
+			bottom.dispose();
+			left.dispose();
+			right.dispose();
+		}
+	});
+
+	bench("dispose computed with 10 subscribers", () => {
+		const r = Ref(0);
+		for (let i = 0; i < 100; i++) {
+			const c = Ref.computed(() => r.get() * 2);
+			for (let j = 0; j < 10; j++) {
+				c.subscribe(() => {});
+			}
+			c.dispose();
+		}
+	});
+});

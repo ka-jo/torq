@@ -8,16 +8,27 @@ import { Ref, Effect, Scope } from "@/index";
  * reactive lifecycle. Scopes enable automatic cleanup of effects when disposed.
  */
 
-describe("Scope Creation & Disposal", () => {
+describe("Scope Creation", () => {
 	bench("create empty scope", () => {
 		for (let i = 0; i < 1000; i++) {
 			Scope();
 		}
 	});
+});
 
+describe("Scope Disposal", () => {
 	bench("dispose empty scope", () => {
 		for (let i = 0; i < 1000; i++) {
 			const scope = Scope();
+			scope.dispose();
+		}
+	});
+
+	bench("dispose scope with 1 effect", () => {
+		const r = Ref(0);
+		for (let i = 0; i < 100; i++) {
+			const scope = Scope();
+			Effect(() => r.get(), { scope });
 			scope.dispose();
 		}
 	});
@@ -41,6 +52,40 @@ describe("Scope Creation & Disposal", () => {
 				Effect(() => r.get(), { scope });
 			}
 			scope.dispose();
+		}
+	});
+
+	bench("dispose nested scopes (3 levels)", () => {
+		for (let i = 0; i < 100; i++) {
+			const scope1 = Scope();
+			const scope2 = Scope({ scope: scope1 });
+			const scope3 = Scope({ scope: scope2 });
+			scope1.dispose();
+		}
+	});
+
+	bench("dispose parent with 10 child scopes", () => {
+		const r = Ref(0);
+		for (let i = 0; i < 100; i++) {
+			const parent = Scope();
+			for (let j = 0; j < 10; j++) {
+				const child = Scope({ scope: parent });
+				Effect(() => r.get(), { scope: child });
+			}
+			parent.dispose();
+		}
+	});
+
+	bench("dispose deeply nested scopes (depth 10)", () => {
+		const r = Ref(0);
+		for (let i = 0; i < 10; i++) {
+			let scope = Scope();
+			const root = scope;
+			for (let j = 0; j < 10; j++) {
+				Effect(() => r.get(), { scope });
+				scope = Scope({ scope });
+			}
+			root.dispose();
 		}
 	});
 });

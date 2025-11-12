@@ -137,3 +137,40 @@ describe("Ref Subscriptions", () => {
 		subs.forEach((sub) => sub.unsubscribe());
 	});
 });
+
+describe("Ref Disposal", () => {
+	bench("dispose ref (no subscribers)", () => {
+		for (let i = 0; i < 1000; i++) {
+			const r = Ref(0);
+			r.dispose();
+		}
+	});
+
+	bench("dispose ref with 1 subscriber", () => {
+		for (let i = 0; i < 100; i++) {
+			const r = Ref(0);
+			r.subscribe(() => {});
+			r.dispose();
+		}
+	});
+
+	bench("dispose ref with 10 subscribers", () => {
+		for (let i = 0; i < 100; i++) {
+			const r = Ref(0);
+			for (let j = 0; j < 10; j++) {
+				r.subscribe(() => {});
+			}
+			r.dispose();
+		}
+	});
+
+	bench("dispose ref with 100 subscribers", () => {
+		for (let i = 0; i < 10; i++) {
+			const r = Ref(0);
+			for (let j = 0; j < 100; j++) {
+				r.subscribe(() => {});
+			}
+			r.dispose();
+		}
+	});
+});
