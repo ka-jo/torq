@@ -21,7 +21,7 @@ npm install @torq-js/reactivity
 
 ### Refs - Reactive Values
 
-Refs are reactive containers for values that implement the Observable protocol. Read with `.get()`, write with `.set()`, and subscribe to changes.
+Refs are reactive containers for values that implement the Observable protocol. Read with `.get()`, write with `.set()`, and subscribe to changes with `.subscribe()`.
 
 ```javascript
 import { Ref } from '@torq-js/reactivity';
@@ -40,15 +40,12 @@ const source = Ref(0);
 const target = Ref(source);
 
 source.set(1);
-
 console.log(target.get()); // 1
 
 target.set(999); // reassigning the target ref will break the connection
-
 console.log(target.get()); // 999
 
 source.set(2); 
-
 console.log(target.get()); // still 999
 ```
 
@@ -216,11 +213,9 @@ Torq's refs are inspired by the [TC39 Signals proposal](https://github.com/tc39/
 
 ```javascript
 const count = Ref(0);
-
 console.log(count.get()); // 0
 
 count.set(5);
-
 console.log(count.get()); // 5
 ```
 
@@ -231,7 +226,7 @@ Torq also embraces the [TC39 Observable proposal](https://github.com/tc39/propos
 ```javascript
 const count = Ref(0);
 
-count.subscribe((value) => console.log('Value:', value));
+count.subscribe((value) => console.log('Value: ', value));
 
 count.set(1); // Logs: "Value: 1"
 ```
@@ -267,16 +262,11 @@ Computed refs cache their results and only recalculate when dependencies actuall
 const count = Ref(1);
 const isOdd = Ref.computed(() => count.get() % 2 === 1);
 
-Effect(() => {
-  console.log('Is odd:', isOdd.get());
-});
-// Logs: "Is odd: true"
+isOdd.subscribe((value) => console.log('Is odd: ', value));
 
-count.set(3); // Both odd, isOdd doesn't change
-// Effect doesn't re-run!
+count.set(4); // This triggers the subscription in a microtask which will log "Is odd: false"
 
-count.set(2); // Now even
-// Logs: "Is odd: false"
+count.set(6); // This does not trigger the subscription because isOdd is still false
 ```
 
 ### Lifecycle Control
@@ -378,8 +368,7 @@ const parentScope = Scope();
 // Explicitly attach to parent scope
 Effect(() => console.log('Effect 1'), { scope: parentScope });
 Scope(() => console.log('Child scope'), { scope: parentScope });
-
-const computed = Ref.computed(() => someValue.get(), { scope: parentScope });
+Ref.computed(() => someValue.get(), { scope: parentScope });
 
 // Disposing parent disposes all explicitly attached children
 parentScope.dispose();
@@ -411,8 +400,8 @@ const doubled = Ref.computed(() => {
 Scopes can be created without a parent by explicitly passing `null` as the scope option. This creates a detached scope that won't be automatically disposed when any parent context ends:
 
 ```javascript
-Scope(() => {
-  // This effect is detached - it won't be disposed when the effect re-runs
+Effect(() => {
+  // This effect is detached - it won't be disposed when the parent effect re-runs or is disposed
   const detachedEffecct = Effect(() => {
     console.log('Detached scope setup');
   }, { scope: null });
