@@ -16,6 +16,13 @@ describe("BaseRef", () => {
 
 			expect(ref[$value]).toBe(0);
 		});
+
+		it("should accept another ref and forward its value", () => {
+			const ref1 = new BaseRef(42);
+			const ref2 = new BaseRef(ref1);
+
+			expect(ref2[$value]).toBe(42);
+		});
 	});
 
 	describe("get method", () => {
@@ -235,6 +242,21 @@ describe("BaseRef", () => {
 			ref.dispose();
 
 			expect(subscription.enabled).toBe(false);
+		});
+
+		it("should unsubscribe from forwarded ref", () => {
+			const ref1 = new BaseRef(0);
+			const ref2 = new BaseRef(ref1);
+			const nextCallback = vi.fn();
+			ref2.subscribe(nextCallback);
+
+			ref2.dispose();
+
+			// After disposal, ref2 should not respond to ref1 changes
+			ref1.set(42);
+
+			expect(nextCallback).not.toHaveBeenCalled();
+			expect(ref2[$value]).toBe(0); // Value shouldn't change
 		});
 	});
 
