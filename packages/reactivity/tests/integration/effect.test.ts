@@ -1,4 +1,4 @@
-import { Effect, Ref } from "@sheen/reactivity";
+import { Effect, Ref } from "@torq-js/reactivity";
 import { flushMicrotasks } from "../fixtures/util";
 
 describe("Effect", () => {

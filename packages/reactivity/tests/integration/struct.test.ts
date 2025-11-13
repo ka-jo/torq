@@ -1,5 +1,4 @@
-import { Struct, Ref } from "@sheen/reactivity";
-import { flushMicrotasks } from "../fixtures/util";
+import { Struct, Ref } from "@torq-js/reactivity";
 
 describe("Struct", () => {
 	it("should return a struct", () => {
