@@ -1,7 +1,5 @@
-import { $flags, $struct, $subscribers, $value } from "@/common/symbols";
-import { Observable, Observer } from "@/common/types";
-import { Subscription } from "@/common/Subscription";
-import { createObserver, getPropertyDescriptor, isObject, isSymbol } from "@/common/util";
+import { $flags, $struct, $value } from "@/common/symbols";
+import { getPropertyDescriptor, isObject, isSymbol } from "@/common/util";
 import type { Struct } from "@/Struct/Struct";
 import type { Ref, WritableComputedRefOptions } from "@/Ref";
 import { isRef } from "@/Ref/isRef";
@@ -13,16 +11,16 @@ import { currentScope } from "@/common/current-scope";
  * The base struct class enables the creation of a reactive object with automatic ref unwrapping via
  * the Proxy API. The struct instance itself acts as the proxy handler. In reactive contexts, the
  * struct will create refs for each property in the original object and further reads/writes to that
- * property will be delegated to the property ref. This means that over time, the original object's
- * properties will be replaced with refs as needed, so it's important to note that the consumer
- * should not keep references to nor interact with the original object directly. We could
- * technically avoid defining refs on the original object because after a property ref is created,
- * further reads/writes will go through it, but I don't like the idea of a struct's object falling
- * out of sync with the struct's refs.
+ * property will be delegated to the property ref.
  *
- * The struct currently keeps a map of refs for each property to act as a hot path in reads/writes:
+ * The struct keeps a map of refs for each property to act as a hot path in reads/writes:
  * if the property ref already exists, we can skip quite a few conditions (e.g. checking if the
  * property in the original object is a ref, checking if the new value is a ref, etc.)
+ *
+ * The proxy returned by `BaseStruct.create()` is the intended API boundary. Consumers should not
+ * keep references to nor interact with the original object directly after passing it to the struct.
+ * The original object is retained internally as the backing store, but all property access should
+ * go through the proxy to ensure proper reactivity tracking.
  *
  * Unlike other "Base" classes, the BaseStruct is a bit different in that the consumer won't
  * directly interact with it. The consumer will interact with a proxy and the struct is created
@@ -31,11 +29,10 @@ import { currentScope } from "@/common/current-scope";
  * @internal
  */
 export class BaseStruct<T extends Record<PropertyKey, unknown> = Record<PropertyKey, unknown>>
-	implements ProxyHandler<T>, Observable<T>
+	implements ProxyHandler<T>
 {
 	declare [$flags]: number;
 	declare [$value]: T;
-	declare [$subscribers]: Subscription[];
 	declare [$struct]: BaseStruct<T>;
 
 	declare proxy: Struct<T>;
@@ -46,7 +43,6 @@ export class BaseStruct<T extends Record<PropertyKey, unknown> = Record<Property
 	private constructor(object: T) {
 		this[$flags] = 0;
 		this[$value] = object;
-		this[$subscribers] = [];
 		this[$struct] = this;
 		Object.defineProperty(object, $struct, {
 			value: this,
@@ -56,18 +52,6 @@ export class BaseStruct<T extends Record<PropertyKey, unknown> = Record<Property
 		});
 
 		this.refs = Object.create(null);
-	}
-
-	subscribe(
-		onNextOrObserver: Partial<Observer<T>> | Observer<T>["next"],
-		onError?: Observer<T>["error"],
-		onComplete?: Observer<T>["complete"]
-	): Subscription {
-		return Subscription.create(this, createObserver(onNextOrObserver, onError, onComplete));
-	}
-
-	[Symbol.observable](): Observable<T> {
-		return this;
 	}
 
 	get(target: T, prop: PropertyKey, receiver: T) {
@@ -146,11 +130,11 @@ export class BaseStruct<T extends Record<PropertyKey, unknown> = Record<Property
 		const descriptor = getPropertyDescriptor(struct[$value], prop);
 		if (descriptor && (descriptor.get || descriptor.set)) {
 			const ref = new ComputedRef({
-				get: descriptor.get?.bind(struct),
-				set: descriptor.set?.bind(struct),
+				get: descriptor.get?.bind(struct.proxy),
+				set: descriptor.set?.bind(struct.proxy),
 			} as WritableComputedRefOptions<unknown>);
 
-			struct[$value][prop] = struct.refs[prop] = ref;
+			struct.refs[prop] = ref;
 
 			if (arguments.length > 2) ref.set(value);
 
@@ -158,9 +142,9 @@ export class BaseStruct<T extends Record<PropertyKey, unknown> = Record<Property
 		}
 
 		if (arguments.length > 2) {
-			return (struct[$value][prop] = struct.refs[prop] = new BaseRef(value, { shallow: false }));
+			return (struct.refs[prop] = new BaseRef(value, { shallow: false }));
 		} else {
-			return (struct[$value][prop] = struct.refs[prop] = new BaseRef(structValue, { shallow: false }));
+			return (struct.refs[prop] = new BaseRef(structValue, { shallow: false }));
 		}
 	}
 }
