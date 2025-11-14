@@ -2,6 +2,7 @@ import { $struct } from "@/common/symbols";
 import { BaseStruct } from "@/Struct/core/BaseStruct";
 import { StructConstructor } from "@/Struct/types/StructConstructor";
 import { isStruct } from "@/Struct/isStruct";
+import { ref } from "@/Struct/ref";
 
 /**
  * @public
@@ -24,6 +25,10 @@ export const Struct: StructConstructor = Object.defineProperties(
 		},
 		isStruct: {
 			value: isStruct,
+			writable: false,
+		},
+		ref: {
+			value: ref,
 			writable: false,
 		},
 	}

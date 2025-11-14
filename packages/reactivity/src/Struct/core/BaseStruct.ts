@@ -131,8 +131,9 @@ export class BaseStruct<T extends Record<PropertyKey, unknown> = Record<Property
 	 * @param prop
 	 * @param value - (optional) The value to use for the ref. If not provided, the value will be taken from the struct's value object.
 	 * @returns a ref instance for the property key.
+	 * @internal
 	 */
-	private static initPropertyRef(struct: BaseStruct, prop: PropertyKey, value?: unknown): Ref {
+	static initPropertyRef(struct: BaseStruct, prop: PropertyKey, value?: unknown): Ref {
 		const structValue = struct[$value][prop];
 		if (isRef(structValue)) {
 			struct.refs[prop] = structValue;
