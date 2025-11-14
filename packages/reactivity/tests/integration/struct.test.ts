@@ -197,5 +197,117 @@ describe("Struct", () => {
 			struct.user.lastName = "Smith";
 			expect(fullName.get()).toBe("Morty Smith");
 		});
+
+		it("should support deep nesting", () => {
+			const struct = Struct({
+				level1: {
+					level2: {
+						level3: {
+							value: 42,
+						},
+					},
+				},
+			});
+
+			expect(struct.level1.level2.level3.value).toBe(42);
+			expect(Struct.isStruct(struct.level1)).toBe(true);
+			expect(Struct.isStruct(struct.level1.level2)).toBe(true);
+			expect(Struct.isStruct(struct.level1.level2.level3)).toBe(true);
+		});
+
+		it("should support modifying nested properties", () => {
+			const struct = Struct({
+				nested: {
+					value: 0,
+				},
+			});
+
+			struct.nested.value = 42;
+
+			expect(struct.nested.value).toBe(42);
+		});
+	});
+
+	describe("property operations", () => {
+		it("should support dynamic property addition", () => {
+			const struct = Struct({ count: 0 }) as any;
+			struct.newProp = "test";
+			expect(struct.newProp).toBe("test");
+		});
+
+		it("should handle property deletion", () => {
+			const struct = Struct({ count: 0, extra: "value" }) as any;
+			delete struct.extra;
+			expect(struct.extra).toBeUndefined();
+		});
+	});
+
+	describe("arrays", () => {
+		it("should handle array properties", () => {
+			const struct = Struct({ items: [1, 2, 3] });
+			expect(struct.items).toEqual([1, 2, 3]);
+		});
+
+		it("should support array mutations", () => {
+			const struct = Struct({ items: [1, 2, 3] });
+			struct.items.push(4);
+			expect(struct.items).toEqual([1, 2, 3, 4]);
+		});
+
+		it("should support replacing array", () => {
+			const struct = Struct({ items: [1, 2, 3] });
+			struct.items = [4, 5, 6];
+			expect(struct.items).toEqual([4, 5, 6]);
+		});
+	});
+
+	describe("edge cases", () => {
+		it("should handle null values", () => {
+			const struct = Struct({ value: null as any });
+			expect(struct.value).toBeNull();
+		});
+
+		it("should handle undefined values", () => {
+			const struct = Struct({ value: undefined as any });
+			expect(struct.value).toBeUndefined();
+		});
+
+		it("should handle symbol properties", () => {
+			const sym = Symbol("test");
+			const struct = Struct({ [sym]: "value" });
+			expect(struct[sym]).toBe("value");
+		});
+
+		it("should handle numeric property keys", () => {
+			const struct = Struct({ 0: "zero", 1: "one" } as any);
+			expect(struct[0]).toBe("zero");
+			expect(struct[1]).toBe("one");
+		});
+
+		it("should handle properties with special names", () => {
+			const struct = Struct({
+				constructor: "test",
+				prototype: "value",
+			} as any);
+
+			expect(struct.constructor).toBe("test");
+			expect(struct.prototype).toBe("value");
+		});
+
+		it("should handle objects with multiple property types", () => {
+			const struct = Struct({
+				number: 42,
+				string: "test",
+				boolean: true,
+				array: [1, 2, 3],
+				object: { nested: "value" },
+			});
+
+			expect(struct.number).toBe(42);
+			expect(struct.string).toBe("test");
+			expect(struct.boolean).toBe(true);
+			expect(struct.array).toEqual([1, 2, 3]);
+			expect(struct.object).toEqual({ nested: "value" });
+		});
 	});
 });
