@@ -1,0 +1,49 @@
+name: Test Reactivity
+
+on:
+  workflow_run:
+    workflows: ["Build Reactivity"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest  # Use GitHub cloud runner
+    # Only run if build succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: false
+        with:
+          pattern: reactivity-dist-*
+          path: ./packages/reactivity/dist/
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify artifacts downloaded
+        run: |
+          if [ ! -d "./packages/reactivity/dist" ] || [ -z "$(ls -A ./packages/reactivity/dist)" ]; then
+            echo "Error: Build artifacts not found or empty"
+            exit 1
+          fi
+          echo "✓ Build artifacts verified"
+
+      - name: Run tests
+        run: pnpm --filter @torq-js/reactivity test

@@ -1,0 +1,80 @@
+name: Benchmark Reactivity
+
+on:
+  workflow_run:
+    workflows: ["Build Reactivity"]
+    types: [completed]
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/reactivity/**"
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: self-hosted
+    # Only run if build succeeded (when triggered by workflow_run)
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js with fnm
+        run: fnm use --install-if-missing
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: reactivity-dist-*
+          path: ./packages/reactivity/dist/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run benchmarks
+        run: pnpm --filter @torq-js/reactivity bench --reporter=json --outputFile=benchmark-results.json
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: "vitest"
+          output-file-path: ./packages/reactivity/benchmark-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Only auto-push on main branch, not on PRs
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          # Alert if performance degrades by more than 10%
+          alert-threshold: "110%"
+          comment-on-alert: true
+          comment-always: true
+          fail-on-alert: false
+          # Store results in gh-pages branch
+          gh-pages-branch: "gh-pages"
+          benchmark-data-dir-path: "bench/reactivity"
+
+      - name: Generate timestamp
+        id: timestamp
+        run: echo "value=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Upload benchmark results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reactivity-benchmark-results-${{ steps.timestamp.outputs.value }}-${{ github.sha }}
+          path: ./packages/reactivity/benchmark-results.json
+          retention-days: 90
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git clean -ffdx
+          git reset --hard

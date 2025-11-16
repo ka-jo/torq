@@ -3,6 +3,7 @@
     "author": "Kaleb Baldwin",
     "license": "MIT",
     "version": "0.0.1",
+    "tag-version-prefix": "reactivity-v",
     "module": "dist/reactivity.es.js",
     "main": "dist/reactivity.cjs.js",
     "types": "dist/reactivity.d.ts",

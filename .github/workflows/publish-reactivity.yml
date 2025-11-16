@@ -1,0 +1,94 @@
+name: Publish Reactivity
+
+on:
+  push:
+    tags:
+      - "reactivity-v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (e.g., reactivity-v0.0.2)"
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for npm provenance
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build package
+        run: pnpm --filter @torq-js/reactivity build
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          VERSION="${TAG#reactivity-v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+
+      - name: Verify package version matches tag
+        run: |
+          cd packages/reactivity
+          PACKAGE_VERSION=$(pnpm pkg get version | tr -d '"')
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo "Error: Package version ($PACKAGE_VERSION) does not match tag version ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "Version verification passed: $PACKAGE_VERSION"
+
+      - name: Publish to npm
+        run: pnpm --filter @torq-js/reactivity publish --access public --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          name: "@torq-js/reactivity v${{ steps.version.outputs.version }}"
+          body: |
+            ## @torq-js/reactivity v${{ steps.version.outputs.version }}
+
+            Published to npm: https://www.npmjs.com/package/@torq-js/reactivity/v/${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
