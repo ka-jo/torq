@@ -25,7 +25,9 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js with fnm
-        run: fnm use --install-if-missing
+        run: |
+          eval "$(fnm env --use-on-cd)"
+          fnm use --install-if-missing
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
