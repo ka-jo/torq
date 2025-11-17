@@ -26,9 +26,8 @@ jobs:
 
       - name: Setup Node.js with fnm
         run: |
-          eval "$(fnm env --use-on-cd)"
-          fnm install
-          fnm use
+          eval "$(fnm env)"
+          fnm use --install-if-missing
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
