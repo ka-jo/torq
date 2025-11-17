@@ -6,9 +6,7 @@
     "test": "pnpm -r test",
     "test:source": "pnpm -r test:source",
     "test:dist": "pnpm -r test:dist",
-    "bench": "pnpm --filter @torq-js/reactivity bench",
-    "bench:watch": "pnpm --filter @torq-js/reactivity bench:watch",
-    "release:reactivity": "cd packages/reactivity && pnpm version --message 'chore(reactivity): release v%s'"
+    "bench": "pnpm --filter @torq-js/reactivity bench"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
