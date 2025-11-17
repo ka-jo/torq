@@ -43,12 +43,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run benchmarks
-        run: pnpm --filter @torq-js/reactivity bench --outputJson=benchmark-results.json
+        run: pnpm --filter @torq-js/reactivity bench --outputJson=benchmark-results-vitest.json
 
       - name: Transform benchmark results
         run: |
           cd packages/reactivity
-          jq '[.files[].groups[].benchmarks[] | {name: .name, unit: "ops/sec", value: .hz}]' benchmark-results.json | sponge benchmark-results.json
+          jq '[.files[].groups[].benchmarks[] | {name: .name, unit: "ops/sec", value: .hz}]' benchmark-results-vitest.json > benchmark-results.json
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
