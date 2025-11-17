@@ -43,13 +43,17 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run benchmarks
+        run: pnpm --filter @torq-js/reactivity bench --outputJson=benchmark-results.json
+
+      - name: Transform benchmark results
         run: |
-          pnpm --filter @torq-js/reactivity bench --outputJson=benchmark-results.json --run
+          cd packages/reactivity
+          jq '[.files[].groups[].benchmarks[] | {name: .name, unit: "ops/sec", value: .hz}]' benchmark-results.json | sponge benchmark-results.json
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          tool: "vitest"
+          tool: "customBiggerIsBetter"
           output-file-path: ./packages/reactivity/benchmark-results.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Only auto-push on main branch, not on PRs
