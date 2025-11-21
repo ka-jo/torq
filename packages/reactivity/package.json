@@ -3,7 +3,6 @@
     "author": "Kaleb Baldwin",
     "license": "MIT",
     "version": "0.0.1",
-    "tag-version-prefix": "reactivity-v",
     "module": "dist/reactivity.es.js",
     "main": "dist/reactivity.cjs.js",
     "types": "dist/reactivity.d.ts",
@@ -12,6 +11,10 @@
         "url": "git+https://github.com/ka-jo/torq",
         "directory": "packages/reactivity"
     },
+    "files": [
+        "dist",
+        "README.md"
+    ],
     "scripts": {
         "test": "vitest run --typecheck",
         "test:source": "TORQ_TEST_TARGET=source vitest run --typecheck",

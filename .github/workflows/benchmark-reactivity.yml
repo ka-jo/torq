@@ -4,30 +4,22 @@ on:
   workflow_run:
     workflows: ["Build Reactivity"]
     types: [completed]
-    branches: [main]
-  pull_request:
-    branches: [main]
-    paths:
-      - "packages/reactivity/**"
-  workflow_dispatch:
 
 jobs:
   benchmark:
     name: Run Benchmarks
     runs-on: self-hosted
-    # Only run if build succeeded (when triggered by workflow_run)
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
+          cache: "pnpm"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -36,9 +28,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
-          pattern: reactivity-dist-*
+          name: reactivity-dist
           path: ./packages/reactivity/dist/
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -67,15 +59,11 @@ jobs:
           gh-pages-branch: "gh-pages"
           benchmark-data-dir-path: "bench/reactivity"
 
-      - name: Generate timestamp
-        id: timestamp
-        run: echo "value=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
       - name: Upload benchmark results as artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: reactivity-benchmark-results-${{ steps.timestamp.outputs.value }}-${{ github.sha }}
+          name: reactivity-benchmark-results
           path: ./packages/reactivity/benchmark-results.json
           retention-days: 90
 
