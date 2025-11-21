@@ -1,0 +1,41 @@
+name: Test Reactivity
+
+on:
+  workflow_run:
+    workflows: ["Build Reactivity"]
+    types: [completed]
+  workflow_call:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest # Use GitHub cloud runner
+    # Only run if build succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v5
+        continue-on-error: false
+        with:
+          name: reactivity-dist
+          path: ./packages/reactivity/dist/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run tests
+        run: pnpm --filter @torq-js/reactivity test

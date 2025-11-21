@@ -1,0 +1,64 @@
+name: Publish Reactivity
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-reactivity.yml
+    secrets: inherit
+
+  test:
+    needs: build
+    uses: ./.github/workflows/test-reactivity.yml
+    secrets: inherit
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for npm provenance
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: reactivity-dist
+          path: ./packages/reactivity/dist/
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Extract version from package.json
+        id: version
+        run: echo "version=$(pnpm pkg get version | tr -d '"')" >> $GITHUB_OUTPUT
+
+      - name: Publish to npm
+        run: pnpm --filter @torq-js/reactivity publish --access public --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "@torq-js/reactivity v${{ steps.version.outputs.version }}"
+          body: |
+            ## @torq-js/reactivity v${{ steps.version.outputs.version }}
+
+            Published to npm: https://www.npmjs.com/package/@torq-js/reactivity/v/${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}

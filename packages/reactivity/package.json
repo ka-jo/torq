@@ -11,13 +11,16 @@
         "url": "git+https://github.com/ka-jo/torq",
         "directory": "packages/reactivity"
     },
+    "files": [
+        "dist",
+        "README.md"
+    ],
     "scripts": {
         "test": "vitest run --typecheck",
         "test:source": "TORQ_TEST_TARGET=source vitest run --typecheck",
         "test:dist": "TORQ_TEST_TARGET=dist vitest run --typecheck",
         "build": "vite build",
-        "bench": "vitest bench",
-        "bench:watch": "vitest bench --watch"
+        "bench": "vitest bench"
     },
     "dependencies": {
         "symbol-observable": "^4.0.0"

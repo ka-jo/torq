@@ -2,3 +2,4 @@ node_modules
 tsconfig.vitest-temp.json
 dist
 packages/reactivity/benchmarks/sandbox.bench.ts
+**/benchmark-results.json

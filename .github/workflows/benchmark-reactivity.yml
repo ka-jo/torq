@@ -1,0 +1,75 @@
+name: Benchmark Reactivity
+
+on:
+  workflow_run:
+    workflows: ["Build Reactivity"]
+    types: [completed]
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: self-hosted
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: reactivity-dist
+          path: ./packages/reactivity/dist/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run benchmarks
+        run: pnpm --filter @torq-js/reactivity bench --outputJson=benchmark-results-vitest.json
+
+      - name: Transform benchmark results
+        run: |
+          cd packages/reactivity
+          jq '[.files[].groups[].benchmarks[] | {name: .name, unit: "ops/sec", value: .hz}]' benchmark-results-vitest.json > benchmark-results.json
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: "customBiggerIsBetter"
+          output-file-path: ./packages/reactivity/benchmark-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Only auto-push on main branch, not on PRs
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          # Alert if performance degrades by more than 10%
+          alert-threshold: "110%"
+          comment-on-alert: true
+          comment-always: true
+          fail-on-alert: false
+          # Store results in gh-pages branch
+          gh-pages-branch: "gh-pages"
+          benchmark-data-dir-path: "bench/reactivity"
+
+      - name: Upload benchmark results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reactivity-benchmark-results
+          path: ./packages/reactivity/benchmark-results.json
+          retention-days: 90
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git clean -ffdx
+          git reset --hard
