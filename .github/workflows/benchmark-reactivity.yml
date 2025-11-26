@@ -1,5 +1,9 @@
 name: Benchmark Reactivity
 
+permissions:
+  contents: read
+  actions: read
+
 on:
   workflow_run:
     workflows: ["Build Reactivity"]
@@ -33,6 +37,7 @@ jobs:
           name: reactivity-dist
           path: ./packages/reactivity/dist/
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
 
       - name: Run benchmarks
         run: pnpm --filter @torq-js/reactivity bench --outputJson=benchmark-results-vitest.json
