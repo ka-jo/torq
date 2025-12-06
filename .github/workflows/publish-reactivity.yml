@@ -33,12 +33,11 @@ jobs:
     steps:
       - name: Check prerelease identifier
         run: |
-          if [ "${{ github.event.inputs['release-type'] }}" != "prerelease" ]; then
-            exit 0
-          fi
-          if [ -z "${{ github.event.inputs['pre-release-identifier'] }}" ]; then
-            echo "Error: 'pre-release-identifier' input is required when 'release-type' is 'prerelease'."
-            exit 1
+          if [ "${{ github.event.inputs['release-type'] }}" = "prerelease" ]; then
+            if [ -z "${{ github.event.inputs['pre-release-identifier'] }}" ]; then
+              echo "Error: 'pre-release-identifier' input is required when 'release-type' is 'prerelease'."
+              exit 1
+            fi
           fi
   build:
     needs: validate-prerelease-input
