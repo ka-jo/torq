@@ -102,6 +102,7 @@ jobs:
           git push origin "v${{ steps.bump_version.outputs.version }}"
 
       - name: Publish to npm
+        # --no-git-checks is needed because version bumping and git operations were already handled in previous steps
         working-directory: packages/reactivity
         run: pnpm publish --access public --provenance --no-git-checks
         env:
