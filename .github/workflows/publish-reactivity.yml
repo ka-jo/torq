@@ -100,7 +100,7 @@ jobs:
 
       - name: Push release commit and tag
         run: |
-          git push origin HEAD
+          git push origin HEAD:${{ github.ref_name }}
           git push origin "v${{ steps.bump_version.outputs.version }}"
 
       - name: Publish to npm
