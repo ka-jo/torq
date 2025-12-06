@@ -54,9 +54,6 @@ jobs:
   publish:
     needs: test
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/reactivity
     permissions:
       contents: write
       id-token: write # Required for npm provenance
@@ -88,6 +85,7 @@ jobs:
 
       - name: Bump version
         id: bump_version
+        working-directory: packages/reactivity
         run: |
           RELEASE_TYPE=${{ github.event.inputs['release-type'] }}
           if [ "$RELEASE_TYPE" = "prerelease" ]; then
@@ -104,6 +102,7 @@ jobs:
           git push origin "v${{ steps.bump_version.outputs.version }}"
 
       - name: Publish to npm
+        working-directory: packages/reactivity
         run: pnpm publish --access public --provenance --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
