@@ -99,7 +99,7 @@ jobs:
       - name: Push release commit and tag
         run: |
           git push origin HEAD:${{ github.ref_name }}
-          git push origin "v${{ steps['bump-version'].outputs.version }}"
+          git push origin "v${{ steps.bump-version.outputs.version }}"
 
       - name: Publish to npm
         working-directory: packages/reactivity
@@ -110,11 +110,11 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps['bump-version'].outputs.version }}
-          name: "@torq-js/reactivity v${{ steps['bump-version'].outputs.version }}"
+          tag_name: v${{ steps.bump-version.outputs.version }}
+          name: "@torq-js/reactivity v${{ steps.bump-version.outputs.version }}"
           body: |
-            ## @torq-js/reactivity v${{ steps['bump-version'].outputs.version }}
+            ## @torq-js/reactivity v${{ steps.bump-version.outputs.version }}
 
-            Published to npm: https://www.npmjs.com/package/@torq-js/reactivity/v/${{ steps['bump-version'].outputs.version }}
+            Published to npm: https://www.npmjs.com/package/@torq-js/reactivity/v/${{ steps.bump-version.outputs.version }}
           draft: false
           prerelease: ${{ github.event.inputs['release-type'] == 'prerelease' }}
