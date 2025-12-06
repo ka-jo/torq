@@ -61,7 +61,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Full history is needed to push tags and commit update to version in package.json
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -74,7 +74,7 @@ jobs:
           git config user.name "torq release workflow"
           git config user.email "github-actions@users.noreply.github.com"
 
-      - name: Install pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
@@ -84,13 +84,12 @@ jobs:
           cache: "pnpm"
 
       - name: Bump version
-        id: bump_version
+        id: bump-version
         working-directory: packages/reactivity
         run: |
-          RELEASE_TYPE=${{ github.event.inputs['release-type'] }}
+          RELEASE_TYPE="${{ github.event.inputs['release-type'] }}"
           if [ "$RELEASE_TYPE" = "prerelease" ]; then
-            PRE_ID=${{ github.event.inputs['pre-release-identifier'] }}
-            NEW_VERSION=$(pnpm version prerelease --preid "$PRE_ID")
+            NEW_VERSION=$(pnpm version prerelease --preid "${{ github.event.inputs['pre-release-identifier'] }}")
           else
             NEW_VERSION=$(pnpm version "$RELEASE_TYPE")
           fi
@@ -99,7 +98,7 @@ jobs:
       - name: Push release commit and tag
         run: |
           git push origin HEAD:${{ github.ref_name }}
-          git push origin "v${{ steps.bump_version.outputs.version }}"
+          git push origin "v${{ steps['bump-version'].outputs.version }}"
 
       - name: Publish to npm
         # --no-git-checks is needed because version bumping and git operations were already handled in previous steps
@@ -111,11 +110,11 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.bump_version.outputs.version }}
-          name: "@torq-js/reactivity v${{ steps.bump_version.outputs.version }}"
+          tag_name: v${{ steps['bump-version'].outputs.version }}
+          name: "@torq-js/reactivity v${{ steps['bump-version'].outputs.version }}"
           body: |
-            ## @torq-js/reactivity v${{ steps.bump_version.outputs.version }}
+            ## @torq-js/reactivity v${{ steps['bump-version'].outputs.version }}
 
-            Published to npm: https://www.npmjs.com/package/@torq-js/reactivity/v/${{ steps.bump_version.outputs.version }}
+            Published to npm: https://www.npmjs.com/package/@torq-js/reactivity/v/${{ steps['bump-version'].outputs.version }}
           draft: false
           prerelease: ${{ github.event.inputs['release-type'] == 'prerelease' }}
