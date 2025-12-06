@@ -6,14 +6,42 @@ permissions:
   id-token: write
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: "Type of release to perform (major, minor, patch, prerelease)"
+        required: true
+        type: choice
+        default: patch
+        options:
+          - major
+          - minor
+          - patch
+          - prerelease
+
+      pre-release-identifier:
+        description: "Identifier for prerelease (e.g., beta, alpha). Only used if release-type is prerelease."
+        required: false
+        type: string
+
+concurrency: publish-reactivity-${{ github.ref }}
 
 jobs:
+  validate-prerelease-input:
+    name: Validate Prerelease Input
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check prerelease identifier
+        run: |
+          if [ "${{ github.event.inputs['release-type'] }}" != "prerelease" ]; then
+            exit 0
+          fi
+          if [ -z "${{ github.event.inputs['pre-release-identifier'] }}" ]; then
+            echo "Error: 'pre-release-identifier' input is required when 'release-type' is 'prerelease'."
+            exit 1
+          fi
   build:
+    needs: validate-prerelease-input
     uses: ./.github/workflows/build-reactivity.yml
     secrets: inherit
 
@@ -25,18 +53,28 @@ jobs:
   publish:
     needs: test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/reactivity
     permissions:
-      contents: read
+      contents: write
       id-token: write # Required for npm provenance
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: reactivity-dist
-          path: ./packages/reactivity/dist/
+          path: ./dist/
+
+      - name: Configure Git
+        run: |
+          git config user.name "torq release workflow"
+          git config user.email "github-actions@users.noreply.github.com"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -47,23 +85,36 @@ jobs:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
-      - name: Extract version from package.json
-        id: version
-        run: echo "version=$(pnpm pkg get version | tr -d '"')" >> $GITHUB_OUTPUT
+      - name: Bump version
+        id: bump_version
+        run: |
+          RELEASE_TYPE=${{ github.event.inputs['release-type'] }}
+          if [ "$RELEASE_TYPE" = "prerelease" ]; then
+            PRE_ID=${{ github.event.inputs['pre-release-identifier'] }}
+            NEW_VERSION=$(pnpm version prerelease --preid "$PRE_ID")
+          else
+            NEW_VERSION=$(pnpm version "$RELEASE_TYPE")
+          fi
+          echo "version=${NEW_VERSION#v}" >> $GITHUB_OUTPUT
+
+      - name: Push release commit and tag
+        run: |
+          git push origin HEAD
+          git push origin "v${{ steps.bump_version.outputs.version }}"
 
       - name: Publish to npm
-        run: pnpm --filter @torq-js/reactivity publish --access public --provenance --no-git-checks
+        run: pnpm publish --access public --provenance --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: "@torq-js/reactivity v${{ steps.version.outputs.version }}"
+          tag_name: v${{ steps.bump_version.outputs.version }}
+          name: "@torq-js/reactivity v${{ steps.bump_version.outputs.version }}"
           body: |
-            ## @torq-js/reactivity v${{ steps.version.outputs.version }}
+            ## @torq-js/reactivity v${{ steps.bump_version.outputs.version }}
 
-            Published to npm: https://www.npmjs.com/package/@torq-js/reactivity/v/${{ steps.version.outputs.version }}
+            Published to npm: https://www.npmjs.com/package/@torq-js/reactivity/v/${{ steps.bump_version.outputs.version }}
           draft: false
-          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          prerelease: ${{ github.event.inputs['release-type'] == 'prerelease' }}
