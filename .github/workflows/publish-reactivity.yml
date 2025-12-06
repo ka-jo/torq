@@ -24,7 +24,9 @@ on:
         required: false
         type: string
 
-concurrency: publish-reactivity-${{ github.ref }}
+concurrency:
+  group: publish-reactivity
+  cancel-in-progress: false
 
 jobs:
   validate-prerelease-input:
