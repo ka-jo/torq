@@ -25,8 +25,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Init
+        uses: ./.github/workflows/actions/init-environment.yml
 
       - name: Run benchmarks
         run: pnpm --filter @torq-js/reactivity bench --outputJson=benchmark-results-vitest.json
