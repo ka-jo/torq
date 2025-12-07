@@ -1,0 +1,20 @@
+name: Reactivity CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/reactivity/**"
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Init
+        uses: ./.github/workflows/actions/init-environment.yml
+
+      - name: Build
+        run: pnpm --filter @torq-js/reactivity build
+
+      - name: Test
+        run: pnpm --filter @torq-js/reactivity test

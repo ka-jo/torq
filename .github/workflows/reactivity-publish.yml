@@ -1,7 +1,7 @@
 name: Publish Reactivity
 
 permissions:
-  contents: read
+  contents: write
   actions: read
   id-token: write
 
@@ -29,11 +29,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  validate-prerelease-input:
-    name: Validate Prerelease Input
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Check prerelease identifier
+      - name: Validate prerelease input
         run: |
           if [ "${{ github.event.inputs['release-type'] }}" = "prerelease" ]; then
             if [ -z "${{ github.event.inputs['pre-release-identifier'] }}" ]; then
@@ -41,48 +40,22 @@ jobs:
               exit 1
             fi
           fi
-  build:
-    needs: validate-prerelease-input
-    uses: ./.github/workflows/build-reactivity.yml
-    secrets: inherit
 
-  test:
-    needs: build
-    uses: ./.github/workflows/test-reactivity.yml
-    secrets: inherit
-
-  publish:
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write # Required for npm provenance
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Init
+        uses: ./.github/workflows/actions/init-environment.yml
         with:
-          fetch-depth: 0 # Full history is needed to push tags and commit update to version in package.json
+          fetch-depth: 0 # Fetch all history for version bumping and tagging
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: reactivity-dist
-          path: ./packages/reactivity/dist/
+      - name: Build
+        run: pnpm --filter @torq-js/reactivity build
+
+      - name: Test
+        run: pnpm --filter @torq-js/reactivity test
 
       - name: Configure Git
         run: |
           git config user.name "torq release workflow"
           git config user.email "github-actions@users.noreply.github.com"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Bump version
         id: bump-version

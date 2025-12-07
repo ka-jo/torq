@@ -1,0 +1,28 @@
+name: Init environment
+description: Installs Node and pnpm, checks out the code, and installs dependencies.
+inputs:
+  fetch-depth:
+    description: "The fetch depth for the checkout action."
+    required: false
+    default: 1
+    type: number
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version-file: ".nvmrc"
+        cache: "pnpm"
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash
