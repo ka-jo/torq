@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: Init
-        uses: ./.github/workflows/actions/init-environment.yml
+        uses: ./.github/actions/init-environment
         with:
           fetch-depth: 0 # Fetch all history for version bumping and tagging
 
