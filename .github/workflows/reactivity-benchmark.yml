@@ -22,9 +22,6 @@ jobs:
     if: (github.event_name == 'pull_request' && github.event.pull_request.draft == false) || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Init
         uses: ./.github/actions/init-environment
 
