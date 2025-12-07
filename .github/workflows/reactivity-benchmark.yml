@@ -1,7 +1,7 @@
 name: Reactivity Benchmark
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 on:
