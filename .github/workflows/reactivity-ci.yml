@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Init
-        uses: ./.github/workflows/actions/init-environment.yml
+        uses: ./.github/actions/init-environment
 
       - name: Build
         run: pnpm --filter @torq-js/reactivity build
