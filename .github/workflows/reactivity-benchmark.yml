@@ -1,43 +1,29 @@
-name: Benchmark Reactivity
+name: Reactivity Benchmark
 
 permissions:
   contents: read
   actions: read
 
 on:
-  workflow_run:
-    workflows: ["Build Reactivity"]
-    types: [completed]
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/reactivity/**"
+  push:
+    branches: [main]
+    paths:
+      - "packages/reactivity/**"
+  workflow_dispatch:
 
 jobs:
   benchmark:
     name: Run Benchmarks
     runs-on: self-hosted
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: (github.event_name == 'pull_request' && github.event.pull_request.draft == false) || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: reactivity-dist
-          path: ./packages/reactivity/dist/
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
+      - name: Init
+        uses: ./.github/workflows/actions/init-environment.yml
 
       - name: Run benchmarks
         run: pnpm --filter @torq-js/reactivity bench --outputJson=benchmark-results-vitest.json
@@ -54,7 +40,7 @@ jobs:
           output-file-path: ./packages/reactivity/benchmark-results.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Only auto-push on main branch, not on PRs
-          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          auto-push: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' }}
           # Alert if performance degrades by more than 10%
           alert-threshold: "110%"
           comment-on-alert: true
