@@ -1,7 +1,7 @@
 name: Publish Reactivity
 
 permissions:
-  contents: read
+  contents: write
   actions: read
   id-token: write
 
@@ -44,7 +44,7 @@ jobs:
       - name: Init
         uses: ./.github/workflows/actions/init-environment.yml
         with:
-          fetch-depth:
+          fetch-depth: 0 # Fetch all history for version bumping and tagging
 
       - name: Build
         run: pnpm --filter @torq-js/reactivity build

@@ -5,7 +5,7 @@ inputs:
     description: "The fetch depth for the checkout action."
     required: false
     default: 1
-    type: string
+    type: number
 runs:
   using: "composite"
   steps:
@@ -25,3 +25,4 @@ runs:
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
+      shell: bash
