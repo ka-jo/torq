@@ -28,6 +28,9 @@ jobs:
       - name: Init
         uses: ./.github/workflows/actions/init-environment.yml
 
+      - name: Build
+        run: pnpm --filter @torq-js/reactivity build
+
       - name: Run benchmarks
         run: pnpm --filter @torq-js/reactivity bench --outputJson=benchmark-results-vitest.json
 
