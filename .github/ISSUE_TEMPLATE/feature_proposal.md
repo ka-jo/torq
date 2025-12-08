@@ -1,9 +1,9 @@
+---
 name: Feature proposal
 about: Document a planned feature or behavior change
 title: "[FEAT]"
 labels: feature
 assignees: ''
-
 ---
 **Problem / motivation**
 Why does this change need to happen? Summarize the user-facing gap, debt, or regression you want to address.
